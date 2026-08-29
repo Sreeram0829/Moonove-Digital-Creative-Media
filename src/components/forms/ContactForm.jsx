@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { brands } from "../../data/brands";
 
 const formNames = {
@@ -13,38 +9,27 @@ const formNames = {
 };
 
 export default function ContactForm() {
-  const [brand, setBrand] = useState(
-    brands[0]?.name || "Moonlit Visual"
-  );
+  const defaultBrand = brands[0]?.name || "Moonlit Visual";
 
+  const [brand, setBrand] = useState(defaultBrand);
   const [status, setStatus] = useState("idle");
-
   const [errors, setErrors] = useState({});
 
   function validate(form) {
-    const values = Object.fromEntries(
-      new FormData(form).entries()
-    );
-
+    const values = Object.fromEntries(new FormData(form).entries());
     const nextErrors = {};
 
     // NAME
-    if (
-      !values.name?.trim() ||
-      values.name.trim().length < 2
-    ) {
+    if (!values.name?.trim() || values.name.trim().length < 2) {
       nextErrors.name = "Please enter your name.";
     }
 
     // EMAIL
     if (
       !values.email?.trim() ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        values.email.trim()
-      )
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())
     ) {
-      nextErrors.email =
-        "Please enter a valid email address.";
+      nextErrors.email = "Please enter a valid email address.";
     }
 
     // SUBJECT
@@ -52,8 +37,7 @@ export default function ContactForm() {
       !values.subject?.trim() ||
       values.subject.trim().length < 3
     ) {
-      nextErrors.subject =
-        "Please add a short subject.";
+      nextErrors.subject = "Please add a short subject.";
     }
 
     // MESSAGE
@@ -61,8 +45,7 @@ export default function ContactForm() {
       !values.message?.trim() ||
       values.message.trim().length < 10
     ) {
-      nextErrors.message =
-        "Please provide at least 10 characters.";
+      nextErrors.message = "Please provide at least 10 characters.";
     }
 
     setErrors(nextErrors);
@@ -81,6 +64,7 @@ export default function ContactForm() {
     // Clear previous status
     setStatus("idle");
 
+    // Validate fields
     const result = validate(form);
 
     if (!result.ok) {
@@ -92,50 +76,34 @@ export default function ContactForm() {
       return;
     }
 
-    const formName =
-      formNames[brand] || "moonlit-contact";
+    const formName = formNames[brand] || "moonlit-contact";
 
     setStatus("sending");
 
-    const data = new URLSearchParams();
-
-    data.append("form-name", formName);
-
-    data.append(
-      "name",
-      result.values.name.trim()
-    );
-
-    data.append(
-      "email",
-      result.values.email.trim()
-    );
-
-    data.append(
-      "brand",
-      brand
-    );
-
-    data.append(
-      "subject",
-      result.values.subject.trim()
-    );
-
-    data.append(
-      "message",
-      result.values.message.trim()
-    );
-
     try {
+      /*
+       * Send the form to Netlify Forms.
+       *
+       * IMPORTANT:
+       * This works on the deployed Netlify site.
+       * localhost:5173 will return 404 because Vite itself
+       * does not process Netlify form submissions.
+       */
+
+      const formData = new FormData(form);
+
+      // Make absolutely sure Netlify receives the correct form name
+      formData.set("form-name", formName);
+
+      // Make sure the selected brand is included
+      formData.set("brand", brand);
+
       const response = await fetch("/", {
         method: "POST",
-
         headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-
-        body: data.toString(),
+        body: new URLSearchParams(formData).toString(),
       });
 
       if (!response.ok) {
@@ -144,24 +112,19 @@ export default function ContactForm() {
         );
       }
 
-      // Clear form fields
+      // Reset form fields
       form.reset();
 
-      // Reset brand
-      setBrand(
-        brands[0]?.name || "Moonlit Visual"
-      );
+      // Reset selected brand
+      setBrand(defaultBrand);
 
-      // Clear errors
+      // Clear validation errors
       setErrors({});
 
-      // Show success
+      // Show success message
       setStatus("success");
     } catch (error) {
-      console.error(
-        "Contact form submission error:",
-        error
-      );
+      console.error("Contact form submission error:", error);
 
       setStatus("error");
     }
@@ -181,16 +144,24 @@ export default function ContactForm() {
       <input
         type="hidden"
         name="form-name"
-        value={
-          formNames[brand] || "moonlit-contact"
-        }
+        value={formNames[brand] || "moonlit-contact"}
       />
 
-      {/* HONEYPOT */}
-      <p className="hidden">
+      {/* HONEYPOT SPAM PROTECTION */}
+      <p
+        style={{
+          position: "absolute",
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+          height: 1,
+          width: 1,
+          margin: -1,
+          padding: 0,
+          border: 0,
+        }}
+      >
         <label>
           Don&apos;t fill this out:
-
           <input
             name="bot-field"
             tabIndex="-1"
@@ -329,9 +300,7 @@ export default function ContactForm() {
         disabled={status === "sending"}
         className="w-full rounded-full bg-white px-5 py-3.5 text-sm font-bold text-[#080810] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {status === "sending"
-          ? "Sending..."
-          : "Send Message"}
+        {status === "sending" ? "Sending..." : "Send Message"}
       </button>
 
       {/* SUCCESS */}
