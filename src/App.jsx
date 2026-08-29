@@ -23,6 +23,21 @@ function Shell() {
 
   const path = location.pathname;
 
+  /*
+   * Background theme is determined only by the current route.
+   *
+   * Moonove:
+   * deep navy / violet / purple / blue / subtle pink / warm gold
+   *
+   * Moonlit Visual:
+   * cosmic navy / violet / blue
+   *
+   * C.K. Drama World:
+   * deep purple / violet / restrained pink
+   *
+   * Learnove Academy:
+   * deep navy / cyan / blue / turquoise
+   */
   const theme = path.includes("moonlit")
     ? "moonlit"
     : path.includes("ck-drama")
@@ -54,6 +69,8 @@ function Shell() {
     <>
       {loading && <LoadingScreen />}
 
+      {/* Global ambient background.
+          Existing page layout and content remain untouched. */}
       <AtmosphericBackground theme={theme} />
 
       <Navbar />
